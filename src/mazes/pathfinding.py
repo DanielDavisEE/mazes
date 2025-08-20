@@ -18,22 +18,22 @@ def reconstruct_path(move_map, goal) -> list:
 
 
 def dijkstras(maze: Maze, start: Node, finish: Node = None):
-    node_set: set = maze.node_set.copy()
+    frontier_set = {start}
 
-    move_map = {node: None for node in node_set}
-    g_score = {node: float('inf') for node in node_set}
-
+    move_map = {node: None for node in maze.node_set}
+    g_score = {node: float('inf') for node in maze.node_set}
     g_score[start] = 0
 
-    while node_set and any(score < float('inf') for score in g_score.values()):
-        current_code = min(node_set, key=lambda n: g_score[n])
-        node_set.remove(current_code)
+    while frontier_set:
+        current_code = min(frontier_set, key=lambda n: g_score[n])
+        frontier_set.remove(current_code)
 
         if finish and current_code == finish:
             break
 
         for node, cost in maze.get_neighbours(current_code):
             if g_score[current_code] + cost < g_score[node]:
+                frontier_set.add(node)
                 g_score[node] = g_score[current_code] + cost
                 move_map[node] = current_code
 
