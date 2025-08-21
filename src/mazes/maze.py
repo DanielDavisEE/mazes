@@ -25,8 +25,10 @@ DIRECTION_OPS = {
 
 Node = tuple[int, int]
 
+class Maze:
+    pass
 
-class RectangularMaze:
+class RectangularMaze(Maze):
     def __init__(self, dimensions: tuple[int, int]):
         self.log = logging.getLogger(self.__class__.__name__)
         self.log.setLevel(logging.DEBUG)

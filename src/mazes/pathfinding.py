@@ -1,6 +1,6 @@
 import logging
 
-from src.mazes.maze import Node, RectangularMaze
+from src.mazes.maze import Node, Maze
 
 LOG = logging.getLogger('PathFinding')
 logging.basicConfig(level='INFO')
@@ -17,7 +17,7 @@ def reconstruct_path(move_map, goal) -> list:
     return list(reversed(path))
 
 
-def dijkstras_mapper(maze: RectangularMaze, start: Node) -> tuple[dict, dict]:
+def dijkstras_mapper(maze: Maze, start: Node) -> tuple[dict, dict]:
     """ Dijkstra's implementation that maps the entire graph in relation to the start node.
 
     Args:
@@ -47,15 +47,15 @@ def dijkstras_mapper(maze: RectangularMaze, start: Node) -> tuple[dict, dict]:
     return g_score, move_map
 
 
-def dijkstras(maze: RectangularMaze, start: Node, finish: Node) -> tuple[dict, list[Node]]:
+def dijkstras(maze: Maze, start: Node, finish: Node) -> tuple[dict, list[Node]]:
     return weighted_a_star(maze, start, finish, weight=0)
 
 
-def a_star(maze: RectangularMaze, start: Node, finish: Node) -> tuple[dict, list[Node]]:
+def a_star(maze: Maze, start: Node, finish: Node) -> tuple[dict, list[Node]]:
     return weighted_a_star(maze, start, finish, weight=1)
 
 
-def weighted_a_star(maze: RectangularMaze, start: Node, finish: Node, *, weight: float = 2.0) -> tuple[dict, list[Node]]:
+def weighted_a_star(maze: Maze, start: Node, finish: Node, *, weight: float = 2.0) -> tuple[dict, list[Node]]:
     frontier_set = {start}
 
     move_map = {node: None for node in maze.node_set}
@@ -90,36 +90,43 @@ def weighted_a_star(maze: RectangularMaze, start: Node, finish: Node, *, weight:
     raise RuntimeError(f"Could not find path from {start} to {finish}")
 
 
-def breadth_first_search(maze: RectangularMaze, start: Node, finish: Node) -> tuple[dict, list[Node]]:
+def breadth_first_search(maze: Maze, start: Node, finish: Node) -> tuple[dict, list[Node]]:
     pass
 
 
-def depth_first_search(maze: RectangularMaze, start: Node, finish: Node) -> tuple[dict, list[Node]]:
+def depth_first_search(maze: Maze, start: Node, finish: Node) -> tuple[dict, list[Node]]:
     pass
 
 
 if __name__ == '__main__':
+    from src.mazes.maze import RectangularMaze
     from src.mazes.maze_views import AsciiView
     from src.mazes.maze_generation import iterative_backtrack as maze_maker
 
     maze_solver = weighted_a_star
 
-    maze = RectangularMaze((10, 10))
-    maze_maker(maze)
+    MAZE_DIMS = (10, 70)
 
-    minimum_path_cost = maze.rows * maze.cols * 0.5
+    minimum_path_cost = MAZE_DIMS[0] * MAZE_DIMS[1] * 0.3
     finish_score = 0
 
     while finish_score < minimum_path_cost:
-        start, finish = 0, 100
-        while maze.find_distance(start, finish) > 1:
+        maze = RectangularMaze(MAZE_DIMS)
+        maze_maker(maze)
+
+        for _ in range(int(MAZE_DIMS[0] * MAZE_DIMS[1] * 0.1)):
             start = maze.random_node()
-            finish = maze.random_node()
+            for finish, _ in maze.get_neighbours(start):
 
-        LOG.info(f"Beginning search at {start}")
-        g_scores, path = maze_solver(maze, start, finish)
-        finish_score = g_scores[finish]
+                LOG.info(f"Beginning search at {start}")
+                g_scores, path = maze_solver(maze, start, finish)
+                finish_score = g_scores[finish]
 
-        LOG.info(f"Reached {finish} with a cost of {finish_score}")
+                LOG.info(f"Reached {finish} with a cost of {finish_score}")
+                if finish_score >= minimum_path_cost:
+                    break
+            if finish_score >= minimum_path_cost:
+                break
 
+    print(AsciiView(maze, start, finish), end='\n\n')
     print(AsciiView(maze, start, finish, path))

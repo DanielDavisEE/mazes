@@ -2,7 +2,7 @@ import logging
 
 import numpy as np
 
-from src.mazes.maze import Directions, RectangularMaze, rng
+from src.mazes.maze import Directions, Maze, rng
 
 LOG = logging.getLogger('MazeGeneration')
 logging.basicConfig(level='INFO')
@@ -26,7 +26,7 @@ def recursive_backtrack(maze, current_node=None, loop_chance: float = 0.0):
                 recursive_backtrack(maze, next_node)
 
 
-def iterative_backtrack(maze: RectangularMaze, loop_chance: float = 0.0):
+def iterative_backtrack(maze: Maze, loop_chance: float = 0.0):
     LOG.info('Creating maze using `iterative_backtrack`')
     current_node = maze.random_node()
     move_stack = [current_node]
@@ -50,49 +50,52 @@ def iterative_backtrack(maze: RectangularMaze, loop_chance: float = 0.0):
             continue
 
 
-def ellers(maze: RectangularMaze):
+def ellers(maze: Maze):
     pass
 
 
-def kruskals(maze: RectangularMaze):
+def kruskals(maze: Maze):
     pass
 
 
-def prims(maze: RectangularMaze):
+def prims(maze: Maze):
     pass
 
 
-def recursive(maze: RectangularMaze):
+def recursive(maze: Maze):
     pass
 
 
-def aldous_broder(maze: RectangularMaze):
+def aldous_broder(maze: Maze):
     pass
 
 
-def wilsons(maze: RectangularMaze):
+def wilsons(maze: Maze):
     pass
 
 
-def hunt_and_kill(maze: RectangularMaze):
+def hunt_and_kill(maze: Maze):
     pass
 
 
-def growing_tree(maze: RectangularMaze):
+def growing_tree(maze: Maze):
     pass
 
 
-def brinary_tree(maze: RectangularMaze):
+def brinary_tree(maze: Maze):
     pass
 
 
-def sidewinder(maze: RectangularMaze):
+def sidewinder(maze: Maze):
     pass
 
 
 if __name__ == '__main__':
+    from src.mazes.maze import RectangularMaze
+    from src.mazes.maze_views import AsciiView
+
     maze = RectangularMaze((10, 10))
 
     recursive_backtrack(maze)
 
-    print(maze.to_string())
+    print(AsciiView(maze))
