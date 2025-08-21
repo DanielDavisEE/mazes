@@ -1,6 +1,6 @@
 import logging
 
-from src.mazes.maze import Maze, Node
+from src.mazes.maze import Node, RectangularMaze
 
 LOG = logging.getLogger('PathFinding')
 logging.basicConfig(level='INFO')
@@ -17,7 +17,17 @@ def reconstruct_path(move_map, goal) -> list:
     return list(reversed(path))
 
 
-def dijkstras(maze: Maze, start: Node, finish: Node = None):
+def dijkstras_mapper(maze: RectangularMaze, start: Node) -> tuple[dict, dict]:
+    """ Dijkstra's implementation that maps the entire graph in relation to the start node.
+
+    Args:
+        maze: The maze to be mapped
+        start: The starting node
+
+    Returns:
+        A dictionary of the G_score for every node on the map
+        A dictionary of the previous node in the optimal path to the start
+    """
     frontier_set = {start}
 
     move_map = {node: None for node in maze.node_set}
@@ -28,9 +38,6 @@ def dijkstras(maze: Maze, start: Node, finish: Node = None):
         current_code = min(frontier_set, key=lambda n: g_score[n])
         frontier_set.remove(current_code)
 
-        if finish and current_code == finish:
-            break
-
         for node, cost in maze.get_neighbours(current_code):
             if g_score[current_code] + cost < g_score[node]:
                 frontier_set.add(node)
@@ -40,35 +47,79 @@ def dijkstras(maze: Maze, start: Node, finish: Node = None):
     return g_score, move_map
 
 
-def a_star(maze: Maze):
+def dijkstras(maze: RectangularMaze, start: Node, finish: Node) -> tuple[dict, list[Node]]:
+    return weighted_a_star(maze, start, finish, weight=0)
+
+
+def a_star(maze: RectangularMaze, start: Node, finish: Node) -> tuple[dict, list[Node]]:
+    return weighted_a_star(maze, start, finish, weight=1)
+
+
+def weighted_a_star(maze: RectangularMaze, start: Node, finish: Node, *, weight: float = 2.0) -> tuple[dict, list[Node]]:
+    frontier_set = {start}
+
+    move_map = {node: None for node in maze.node_set}
+
+    g_score = {node: float('inf') for node in maze.node_set}
+    g_score[start] = 0
+
+    f_score = {node: float('inf') for node in maze.node_set}
+    f_score[start] = maze.find_distance(start, finish) * weight
+
+    while frontier_set:
+        # Possibility for optimisation here by using a heap/priority queue instead of a set ( O(n) -> O(log(n)) )
+        current_code = min(frontier_set, key=lambda n: f_score[n])
+        if current_code == finish:
+            return g_score, reconstruct_path(move_map, finish)
+
+        frontier_set.remove(current_code)
+
+        for node, cost in maze.get_neighbours(current_code):
+            possible_g_score = g_score[current_code] + cost
+            if possible_g_score < g_score[node]:
+                frontier_set.add(node)
+                g_score[node] = possible_g_score
+                f_score[node] = possible_g_score + maze.find_distance(node, finish) * weight
+                move_map[node] = current_code
+
+                # This is only relevant if a node is reached a second time with a lower score, as might happen
+                #  if the heuristic function (find_distance) is not consistent
+                if node not in frontier_set:
+                    frontier_set.add(node)
+
+    raise RuntimeError(f"Could not find path from {start} to {finish}")
+
+
+def breadth_first_search(maze: RectangularMaze, start: Node, finish: Node) -> tuple[dict, list[Node]]:
     pass
 
 
-def weighted_a_star(maze: Maze, weight):
-    pass
-
-
-def breadth_first_search(maze: Maze):
-    pass
-
-
-def depth_first_search(maze: Maze):
+def depth_first_search(maze: RectangularMaze, start: Node, finish: Node) -> tuple[dict, list[Node]]:
     pass
 
 
 if __name__ == '__main__':
-    from src.mazes.maze import AcsiiView
+    from src.mazes.maze_views import AsciiView
     from src.mazes.maze_generation import iterative_backtrack as maze_maker
-    maze_solver = dijkstras
 
-    maze = Maze((11, 11))
+    maze_solver = weighted_a_star
+
+    maze = RectangularMaze((10, 10))
     maze_maker(maze)
-    start = (0, 5)  # maze.random_node()
-    maze.remove_wall(start, 'N')
 
-    LOG.info(f"Beginning search at {start}")
-    g_scores, move_map = maze_solver(maze, start)
+    minimum_path_cost = maze.rows * maze.cols * 0.5
+    finish_score = 0
 
-    finish = max(g_scores, key=lambda n: g_scores[n])
-    LOG.info(f"Reached {finish} with a cost of {g_scores[finish]}")
-    print(AcsiiView(maze, start, finish, reconstruct_path(move_map, finish)))
+    while finish_score < minimum_path_cost:
+        start, finish = 0, 100
+        while maze.find_distance(start, finish) > 1:
+            start = maze.random_node()
+            finish = maze.random_node()
+
+        LOG.info(f"Beginning search at {start}")
+        g_scores, path = maze_solver(maze, start, finish)
+        finish_score = g_scores[finish]
+
+        LOG.info(f"Reached {finish} with a cost of {finish_score}")
+
+    print(AsciiView(maze, start, finish, path))

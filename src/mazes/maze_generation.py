@@ -2,7 +2,7 @@ import logging
 
 import numpy as np
 
-from src.mazes.maze import DIRECTIONS, Maze, rng
+from src.mazes.maze import Directions, RectangularMaze, rng
 
 LOG = logging.getLogger('MazeGeneration')
 logging.basicConfig(level='INFO')
@@ -15,7 +15,7 @@ def recursive_backtrack(maze, current_node=None, loop_chance: float = 0.0):
         current_node = maze.random_node()
     LOG.debug(f'Visiting node: {current_node}')
 
-    directions = np.array(list(DIRECTIONS.keys()))
+    directions = np.array(Directions)
     rng.shuffle(directions)
     for direction in directions:
         next_node = maze.move(current_node, direction)
@@ -26,11 +26,11 @@ def recursive_backtrack(maze, current_node=None, loop_chance: float = 0.0):
                 recursive_backtrack(maze, next_node)
 
 
-def iterative_backtrack(maze: Maze, loop_chance: float = 0.0):
+def iterative_backtrack(maze: RectangularMaze, loop_chance: float = 0.0):
     LOG.info('Creating maze using `iterative_backtrack`')
     current_node = maze.random_node()
     move_stack = [current_node]
-    directions = np.array(list(DIRECTIONS.keys()))
+    directions = np.array(Directions)
 
     while move_stack:
         LOG.debug(f'Visiting node: {current_node}')
@@ -50,48 +50,48 @@ def iterative_backtrack(maze: Maze, loop_chance: float = 0.0):
             continue
 
 
-def ellers(maze: Maze):
+def ellers(maze: RectangularMaze):
     pass
 
 
-def kruskals(maze: Maze):
+def kruskals(maze: RectangularMaze):
     pass
 
 
-def prims(maze: Maze):
+def prims(maze: RectangularMaze):
     pass
 
 
-def recursive(maze: Maze):
+def recursive(maze: RectangularMaze):
     pass
 
 
-def aldous_broder(maze: Maze):
+def aldous_broder(maze: RectangularMaze):
     pass
 
 
-def wilsons(maze: Maze):
+def wilsons(maze: RectangularMaze):
     pass
 
 
-def hunt_and_kill(maze: Maze):
+def hunt_and_kill(maze: RectangularMaze):
     pass
 
 
-def growing_tree(maze: Maze):
+def growing_tree(maze: RectangularMaze):
     pass
 
 
-def brinary_tree(maze: Maze):
+def brinary_tree(maze: RectangularMaze):
     pass
 
 
-def sidewinder(maze: Maze):
+def sidewinder(maze: RectangularMaze):
     pass
 
 
 if __name__ == '__main__':
-    maze = Maze((10, 10))
+    maze = RectangularMaze((10, 10))
 
     recursive_backtrack(maze)
 
