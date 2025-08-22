@@ -4,11 +4,11 @@ from tkinter import ttk
 
 import numpy as np
 
-from src.mazes.maze import Directions
+from src.mazes.maze import Directions, Maze, RectangularMaze
 
 
 class ViewBase:
-    def __init__(self, maze, start=None, finish=None, path=None):
+    def __init__(self, maze=None, start=None, finish=None, path=None):
         self.log = logging.getLogger(self.__class__.__name__)
         self.log.setLevel(logging.DEBUG)
 
@@ -85,14 +85,19 @@ class TkRectView(ViewBase):
     LINE_WIDTH = 2
     MARGIN = 10
 
-    def __init__(self, *args, **kwargs):
+    _maze = None
+
+    def __init__(self, master, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.root = tk.Tk()
-        self.root.title("Maze")
-
-        self.frame = ttk.Frame(self.root)
+        self.frame = ttk.Frame(master)
         self.frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+
+        button_frame = ttk.Frame(self.frame)
+        button_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+
+    def create_canvas(self):
+        self.canvas.delete("all")
 
         self.width_px = self.maze.cols * (self.SQUARE_PX + self.LINE_WIDTH) + self.LINE_WIDTH + 2 * self.MARGIN
         self.height_px = self.maze.rows * (self.SQUARE_PX + self.LINE_WIDTH) + self.LINE_WIDTH + 2 * self.MARGIN
@@ -100,14 +105,21 @@ class TkRectView(ViewBase):
         self.canvas = tk.Canvas(self.frame, width=self.width_px, height=self.height_px, background='gray90')
         self.canvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
-        self.draw_walls()
-        if self.path:
-            self.draw_path()
+        if self.maze:
+            self.draw_walls()
+            if self.path:
+                self.draw_path()
 
-        # Configure window size and placement
-        self.root.resizable(False, False)
-        self.root.eval('tk::PlaceWindow . center')
-        self.root.minsize(self.root.winfo_width(), self.root.winfo_height())
+    @property
+    def maze(self) -> RectangularMaze:
+        return self._maze
+
+    @maze.setter
+    def maze(self, maze: RectangularMaze):
+        if maze is None:
+            return
+        self._maze = maze
+        self.draw_walls()
 
     def rc_to_xy(self, node, align=tk.NW):
         square_offset = (self.SQUARE_PX + self.LINE_WIDTH)
@@ -187,6 +199,3 @@ class TkRectView(ViewBase):
             start_px = self.rc_to_xy(start, align=tk.CENTER)
             stop_px = self.rc_to_xy(stop, align=tk.CENTER)
             self.canvas.create_line(*start_px, *stop_px, width=self.LINE_WIDTH, dash=(2, 2))
-
-    def run(self):
-        self.root.mainloop()
