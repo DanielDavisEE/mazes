@@ -100,12 +100,12 @@ def depth_first_search(maze: Maze, start: Node, finish: Node) -> tuple[dict, lis
 
 if __name__ == '__main__':
     from src.mazes.maze import RectangularMaze
-    from src.mazes.maze_views import AsciiView
+    from src.mazes.maze_views import TkRectView
     from src.mazes.maze_generation import iterative_backtrack as maze_maker
 
     maze_solver = weighted_a_star
 
-    MAZE_DIMS = (10, 70)
+    MAZE_DIMS = (10, 20)
 
     minimum_path_cost = MAZE_DIMS[0] * MAZE_DIMS[1] * 0.3
     finish_score = 0
@@ -128,5 +128,5 @@ if __name__ == '__main__':
             if finish_score >= minimum_path_cost:
                 break
 
-    print(AsciiView(maze, start, finish), end='\n\n')
-    print(AsciiView(maze, start, finish, path))
+    view = TkRectView(maze, start, finish, path)
+    view.run()

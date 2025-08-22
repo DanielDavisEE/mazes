@@ -25,8 +25,10 @@ DIRECTION_OPS = {
 
 Node = tuple[int, int]
 
+
 class Maze:
     pass
+
 
 class RectangularMaze(Maze):
     def __init__(self, dimensions: tuple[int, int]):

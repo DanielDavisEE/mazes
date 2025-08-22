@@ -1,4 +1,6 @@
 import logging
+import tkinter as tk
+from tkinter import ttk
 
 import numpy as np
 
@@ -78,6 +80,113 @@ class AsciiView(ViewBase):
         self._maze_array = maze_array
 
 
-class TkView(ViewBase):
+class TkRectView(ViewBase):
+    SQUARE_PX = 41
+    LINE_WIDTH = 2
+    MARGIN = 10
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        self.root = tk.Tk()
+        self.root.title("Maze")
+
+        self.frame = ttk.Frame(self.root)
+        self.frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+
+        self.width_px = self.maze.cols * (self.SQUARE_PX + self.LINE_WIDTH) + self.LINE_WIDTH + 2 * self.MARGIN
+        self.height_px = self.maze.rows * (self.SQUARE_PX + self.LINE_WIDTH) + self.LINE_WIDTH + 2 * self.MARGIN
+
+        self.canvas = tk.Canvas(self.frame, width=self.width_px, height=self.height_px, background='gray90')
+        self.canvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+
+        self.draw_walls()
+        if self.path:
+            self.draw_path()
+
+        # Configure window size and placement
+        self.root.resizable(False, False)
+        self.root.eval('tk::PlaceWindow . center')
+        self.root.minsize(self.root.winfo_width(), self.root.winfo_height())
+
+    def rc_to_xy(self, node, align=tk.NW):
+        square_offset = (self.SQUARE_PX + self.LINE_WIDTH)
+        x, y = (node[1] * square_offset + self.MARGIN,
+                node[0] * square_offset + self.MARGIN)
+        match align:
+            # Sides
+            case tk.N:
+                x += square_offset // 2
+            case tk.S:
+                x += square_offset // 2
+                y += square_offset
+            case tk.W:
+                y += square_offset // 2
+            case tk.E:
+                x += square_offset
+                y += square_offset // 2
+
+            # Corners
+            case tk.NW:
+                pass
+            case tk.SW:
+                y += square_offset
+            case tk.NE:
+                x += square_offset
+            case tk.SE:
+                x += square_offset
+                y += square_offset
+
+            # Centre
+            case tk.NS | tk.EW | tk.NSEW | tk.CENTER:
+                x += square_offset // 2
+                y += square_offset // 2
+
+            case _:
+                raise RuntimeError(f"{align=}")
+        return x, y
+
+    def _draw_wall(self, node, direction):
+        match direction:
+            case Directions.N:
+                line_origin = node
+                line_dest = self.maze.move(node, Directions.E)
+            case Directions.W:
+                line_origin = node
+                line_dest = self.maze.move(node, Directions.S)
+            case Directions.S:
+                line_origin = self.maze.move(node, Directions.S)
+                line_dest = self.maze.move(self.maze.move(node, Directions.E), Directions.S)
+            case Directions.E:
+                line_origin = self.maze.move(node, Directions.E)
+                line_dest = self.maze.move(self.maze.move(node, Directions.E), Directions.S)
+            case _:
+                raise RuntimeError(f"{direction=}")
+        line_origin_px = self.rc_to_xy(line_origin, align=tk.NW)
+        line_dest_px = self.rc_to_xy(line_dest, align=tk.NW)
+
+        self.canvas.create_line(*line_origin_px, *line_dest_px, width=self.LINE_WIDTH)
+
+    def draw_walls(self):
+        for i in range(self.maze.rows):
+            for j in range(self.maze.cols):
+                if self.maze.is_wall((i, j), Directions.N):
+                    self._draw_wall((i, j), Directions.N)
+                if self.maze.is_wall((i, j), Directions.W):
+                    self._draw_wall((i, j), Directions.W)
+        for i in range(self.maze.rows):
+            if self.maze.is_wall((i, self.maze.cols - 1), Directions.E):
+                self._draw_wall((i, self.maze.cols - 1), Directions.E)
+        for j in range(self.maze.cols):
+            if self.maze.is_wall((self.maze.rows - 1, j), Directions.S):
+                self._draw_wall((self.maze.rows - 1, j), Directions.S)
+
+    def draw_path(self):
+        for i in range(len(self.path) - 1):
+            start, stop = self.path[i], self.path[i + 1]
+            start_px = self.rc_to_xy(start, align=tk.CENTER)
+            stop_px = self.rc_to_xy(stop, align=tk.CENTER)
+            self.canvas.create_line(*start_px, *stop_px, width=self.LINE_WIDTH, dash=(2, 2))
+
+    def run(self):
+        self.root.mainloop()
