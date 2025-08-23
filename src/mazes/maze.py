@@ -1,4 +1,5 @@
 import logging
+from abc import ABC, abstractmethod
 from enum import IntEnum
 
 import numpy as np
@@ -26,22 +27,60 @@ DIRECTION_OPS = {
 Node = tuple[int, int]
 
 
-class Maze:
-    pass
+class Maze(ABC):
+    node_set: set
+
+    def __init__(self):
+        self.log = logging.getLogger(self.__class__.__name__)
+        self.log.setLevel(logging.DEBUG)
+
+    @abstractmethod
+    def move(self, node: Node, direction: Directions) -> Node:
+        raise NotImplementedError
+
+    @abstractmethod
+    def edge_cost(self, node: Node, direction: Directions) -> float:
+        raise NotImplementedError
+
+    @abstractmethod
+    def is_wall(self, node: Node, direction: Directions) -> bool:
+        raise NotImplementedError
+
+    @abstractmethod
+    def remove_wall(self, node: Node, direction: Directions):
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_neighbours(self, node: Node) -> list[tuple[Node, float]]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def random_node(self) -> Node:
+        raise NotImplementedError
+
+    @abstractmethod
+    def find_distance(self, node_a: Node, node_b: Node) -> float:
+        raise NotImplementedError
 
 
 class RectangularMaze(Maze):
-    def __init__(self, dimensions: tuple[int, int]):
-        self.log = logging.getLogger(self.__class__.__name__)
-        self.log.setLevel(logging.DEBUG)
+    def __init__(self, dimensions: tuple[int, int], generation_alg=None):
+        super().__init__()
 
         self.rows = dimensions[0]
         self.cols = dimensions[1]
 
         self.maze_array = np.ones((*dimensions, 4)) * float('inf')
-        # self.maze_array = np.random.random((*dimensions, 4)) > 0.5
-
         self.node_set: set[Node] = set([(i, j) for i in range(self.rows) for j in range(self.cols)])
+
+        if generation_alg:
+            generation_alg(self)
+
+    @classmethod
+    def blank_maze(cls, dimensions):
+        inst = cls(dimensions)
+        inst.maze_array = np.zeros((*dimensions, 4))
+        return inst
 
     def move(self, node: Node, direction: Directions) -> Node:
         row, col = np.array(node) + DIRECTION_OPS[direction]
@@ -50,10 +89,10 @@ class RectangularMaze(Maze):
     def edge_cost(self, node: Node, direction: Directions) -> float:
         return self.maze_array[*node, direction.value]
 
-    def is_wall(self, node: Node, direction: Directions):
+    def is_wall(self, node: Node, direction: Directions) -> bool:
         return self.edge_cost(node, direction) == float('inf')
 
-    def remove_wall(self, node: Node, direction: Directions) -> None:
+    def remove_wall(self, node: Node, direction: Directions):
         if isinstance(direction, (int, np.int64)):
             direction = Directions(direction)
         self.maze_array[*node, direction.value] = 1
@@ -70,7 +109,7 @@ class RectangularMaze(Maze):
         row, col = tuple(rng.integers((self.rows, self.cols), size=2))
         return int(row), int(col)
 
-    def find_distance(self, node_a: Node, node_b: Node):
+    def find_distance(self, node_a: Node, node_b: Node) -> float:
         if node_a not in self.node_set or node_b not in self.node_set:
             self.log.warning(f'Invalid node input: {node_a}, {node_b}')
         return np.abs(np.array(node_a) - np.array(node_b)).sum()

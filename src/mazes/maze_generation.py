@@ -1,4 +1,5 @@
 import logging
+from enum import IntEnum
 
 import numpy as np
 
@@ -9,11 +10,18 @@ logging.basicConfig(level='INFO')
 LOG.setLevel('INFO')
 
 
-def recursive_backtrack(maze, current_node=None, loop_chance: float = 0.0):
+class Moves(IntEnum):
+    Visit = 0  # Encounter node
+    Complete = 1  # Finish processing the node
+
+
+def recursive_backtrack(maze, current_node=None, loop_chance: float = 0.0, *, move_history: list = None):
     LOG.debug('Creating maze using `recursive_backtrack`')
     if current_node is None:
         current_node = maze.random_node()
     LOG.debug(f'Visiting node: {current_node}')
+    if move_history:
+        move_history.append((current_node, Moves.Visit))
 
     directions = np.array(Directions)
     rng.shuffle(directions)
@@ -23,10 +31,12 @@ def recursive_backtrack(maze, current_node=None, loop_chance: float = 0.0):
             # Is it an unvisited node, or should we randomly add a loop?
             if (maze.maze_array[*next_node, :] == float('inf')).all() or rng.random() < loop_chance:
                 maze.remove_wall(current_node, direction)
-                recursive_backtrack(maze, next_node)
+                recursive_backtrack(maze, next_node, move_history=move_history)
+    if move_history:
+        move_history.append((current_node, Moves.Complete))
 
 
-def iterative_backtrack(maze: Maze, loop_chance: float = 0.0):
+def iterative_backtrack(maze: Maze, loop_chance: float = 0.0, *, move_history: list = None):
     LOG.info('Creating maze using `iterative_backtrack`')
     current_node = maze.random_node()
     move_stack = [current_node]
@@ -34,6 +44,8 @@ def iterative_backtrack(maze: Maze, loop_chance: float = 0.0):
 
     while move_stack:
         LOG.debug(f'Visiting node: {current_node}')
+        if move_history:
+            move_history.append((current_node, Moves.Visit))
 
         rng.shuffle(directions)
         for direction in directions:
@@ -47,6 +59,8 @@ def iterative_backtrack(maze: Maze, loop_chance: float = 0.0):
                     break
         else:  # Didn't break, backtrack
             current_node = move_stack.pop()
+            if move_history:
+                move_history.append((current_node, Moves.Complete))
             continue
 
 
