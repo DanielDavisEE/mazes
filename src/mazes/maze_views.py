@@ -80,46 +80,43 @@ class AsciiView(ViewBase):
         self._maze_array = maze_array
 
 
-class TkRectView(ViewBase):
+class TkRectCanvas(ViewBase):
     SQUARE_PX = 41
     LINE_WIDTH = 2
     MARGIN = 10
 
-    _maze = None
-
-    def __init__(self, master, *args, **kwargs):
+    def __init__(self, master=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.frame = ttk.Frame(master)
         self.frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
+        self.canvas = None
+        self.create_canvas()
+
+        self.maze_lines: dict = None
+        self.draw_maze()
+
         button_frame = ttk.Frame(self.frame)
         button_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
     def create_canvas(self):
-        self.canvas.delete("all")
+        if self.canvas:
+            self.canvas.destroy()
 
-        self.width_px = self.maze.cols * (self.SQUARE_PX + self.LINE_WIDTH) + self.LINE_WIDTH + 2 * self.MARGIN
-        self.height_px = self.maze.rows * (self.SQUARE_PX + self.LINE_WIDTH) + self.LINE_WIDTH + 2 * self.MARGIN
+        width_px = self.maze.cols * (self.SQUARE_PX + self.LINE_WIDTH) + self.LINE_WIDTH + 2 * self.MARGIN
+        height_px = self.maze.rows * (self.SQUARE_PX + self.LINE_WIDTH) + self.LINE_WIDTH + 2 * self.MARGIN
 
-        self.canvas = tk.Canvas(self.frame, width=self.width_px, height=self.height_px, background='gray90')
+        self.canvas = tk.Canvas(self.frame, width=width_px, height=height_px, background='gray90')
         self.canvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
+    def draw_maze(self):
+        self.canvas.delete("all")
+        self.maze_lines = {'walls': [], 'paths': []}
         if self.maze:
             self.draw_walls()
             if self.path:
                 self.draw_path()
-
-    @property
-    def maze(self) -> RectangularMaze:
-        return self._maze
-
-    @maze.setter
-    def maze(self, maze: RectangularMaze):
-        if maze is None:
-            return
-        self._maze = maze
-        self.draw_walls()
 
     def rc_to_xy(self, node, align=tk.NW):
         square_offset = (self.SQUARE_PX + self.LINE_WIDTH)
@@ -177,7 +174,8 @@ class TkRectView(ViewBase):
         line_origin_px = self.rc_to_xy(line_origin, align=tk.NW)
         line_dest_px = self.rc_to_xy(line_dest, align=tk.NW)
 
-        self.canvas.create_line(*line_origin_px, *line_dest_px, width=self.LINE_WIDTH)
+        wall_line = self.canvas.create_line(*line_origin_px, *line_dest_px, width=self.LINE_WIDTH)
+        self.maze_lines['walls'].append(wall_line)
 
     def draw_walls(self):
         for i in range(self.maze.rows):
@@ -193,9 +191,31 @@ class TkRectView(ViewBase):
             if self.maze.is_wall((self.maze.rows - 1, j), Directions.S):
                 self._draw_wall((self.maze.rows - 1, j), Directions.S)
 
+    def _draw_path_segment(self, node_a, nopde_b):
+            start_px = self.rc_to_xy(node_a, align=tk.CENTER)
+            stop_px = self.rc_to_xy(nopde_b, align=tk.CENTER)
+
+            path_line = self.canvas.create_line(*start_px, *stop_px, width=self.LINE_WIDTH, dash=(2, 2))
+            self.maze_lines['paths'].append(path_line)
+
     def draw_path(self):
         for i in range(len(self.path) - 1):
-            start, stop = self.path[i], self.path[i + 1]
-            start_px = self.rc_to_xy(start, align=tk.CENTER)
-            stop_px = self.rc_to_xy(stop, align=tk.CENTER)
-            self.canvas.create_line(*start_px, *stop_px, width=self.LINE_WIDTH, dash=(2, 2))
+            self._draw_path_segment(self.path[i], self.path[i + 1])
+
+
+class TkView(ViewBase):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.root = tk.Tk()
+        self.root.title("Maze GUI")
+
+        self.view = TkRectCanvas(self.root, self.maze, self.start, self.finish, self.path)
+        self.view.draw_maze()
+
+        # Configure window size and placement
+        self.root.resizable(True, True)
+        self.root.eval('tk::PlaceWindow . center')
+        self.root.minsize(self.root.winfo_width(), self.root.winfo_height())
+
+        self.root.mainloop()
