@@ -1,27 +1,30 @@
 import logging
-from abc import ABC, abstractmethod
-from enum import IntEnum
+from abc import (
+    ABC,
+    abstractmethod,
+)
+from enum import Enum
 
 import numpy as np
 
 rng = np.random.default_rng()
 
 
-class Directions(IntEnum):
+class Direction(Enum):
     N = 0
     W = 1
     S = 2
     E = 3
 
     def flip(self):
-        return Directions((self.value + 2) % 4)
+        return Direction((self.value + 2) % 4)
 
 
 DIRECTION_OPS = {
-    Directions.N: np.array([-1, 0]),
-    Directions.W: np.array([0, -1]),
-    Directions.S: np.array([1, 0]),
-    Directions.E: np.array([0, 1]),
+    Direction.N: np.array([-1, 0]),
+    Direction.W: np.array([0, -1]),
+    Direction.S: np.array([1, 0]),
+    Direction.E: np.array([0, 1]),
 }
 
 Node = tuple[int, int]
@@ -35,23 +38,23 @@ class Maze(ABC):
         self.log.setLevel(logging.DEBUG)
 
     @abstractmethod
-    def move(self, node: Node, direction: Directions) -> Node:
+    def move(self, node: Node, direction: Direction) -> Node:
         raise NotImplementedError
 
     @abstractmethod
-    def edge_cost(self, node: Node, direction: Directions) -> float:
+    def edge_cost(self, node: Node, direction: Direction) -> float:
         raise NotImplementedError
 
     @abstractmethod
-    def is_wall(self, node: Node, direction: Directions) -> bool:
+    def is_wall(self, node: Node, direction: Direction) -> bool:
         raise NotImplementedError
 
     @abstractmethod
-    def remove_wall(self, node: Node, direction: Directions):
+    def remove_wall(self, node: Node, direction: Direction):
         raise NotImplementedError
 
     @abstractmethod
-    def get_neighbours(self, node: Node) -> list[tuple[Node, float]]:
+    def get_neighbours(self, node: Node) -> list[tuple[Direction, Node]]:
         raise NotImplementedError
 
     @abstractmethod
@@ -82,28 +85,28 @@ class RectangularMaze(Maze):
         inst.maze_array = np.zeros((*dimensions, 4))
         return inst
 
-    def move(self, node: Node, direction: Directions) -> Node:
+    def move(self, node: Node, direction: Direction) -> Node:
         row, col = np.array(node) + DIRECTION_OPS[direction]
         return int(row), int(col)
 
-    def edge_cost(self, node: Node, direction: Directions) -> float:
+    def edge_cost(self, node: Node, direction: Direction) -> float:
         return self.maze_array[*node, direction.value]
 
-    def is_wall(self, node: Node, direction: Directions) -> bool:
+    def is_wall(self, node: Node, direction: Direction) -> bool:
         return self.edge_cost(node, direction) == float('inf')
 
-    def remove_wall(self, node: Node, direction: Directions):
+    def remove_wall(self, node: Node, direction: Direction):
         if isinstance(direction, (int, np.int64)):
-            direction = Directions(direction)
+            direction = Direction(direction)
         self.maze_array[*node, direction.value] = 1
 
         dest_node = self.move(node, direction)
         if all(coord >= 0 for coord in dest_node):
             self.maze_array[*dest_node, direction.flip().value] = 1
 
-    def get_neighbours(self, node: Node) -> list[tuple[Node, float]]:
-        possible_nodes = [(self.move(node, direction), float(self.edge_cost(node, direction))) for direction in Directions]
-        return [(node, cost) for node, cost in possible_nodes if node in self.node_set]
+    def get_neighbours(self, node: Node) -> list[tuple[Direction, Node]]:
+        possible_nodes = [(direction, self.move(node, direction)) for direction in Direction]
+        return [(direction, node) for direction, node in possible_nodes if node in self.node_set]
 
     def random_node(self) -> Node:
         row, col = tuple(rng.integers((self.rows, self.cols), size=2))

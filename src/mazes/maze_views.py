@@ -4,7 +4,10 @@ from tkinter import ttk
 
 import numpy as np
 
-from src.mazes.maze import Directions, Node
+from src.mazes.maze import (
+    Direction,
+    Node,
+)
 
 
 class ViewBase:
@@ -69,11 +72,11 @@ class AsciiView(ViewBase):
         row_coords, col_coords = np.arange(0, maze_array.shape[0], 2), np.arange(0, maze_array.shape[1], 4)
 
         for i, row_coord in enumerate(row_coords[:-1]):
-            maze_array[row_coord, :-1] = np.where(self.maze.maze_array[i, :, Directions.N.value] < float('inf'), ' ' * 4, '-' * 4).view('<U1')
+            maze_array[row_coord, :-1] = np.where(self.maze.maze_array[i, :, Direction.N.value] < float('inf'), ' ' * 4, '-' * 4).view('<U1')
         maze_array[-1, :] = '-'
 
         for i, col_coord in enumerate(col_coords[:-1]):
-            maze_array[:-1, col_coord] = np.where(self.maze.maze_array[:, i, Directions.W.value] < float('inf'), ' ' * 2, '|' * 2).view('<U1')
+            maze_array[:-1, col_coord] = np.where(self.maze.maze_array[:, i, Direction.W.value] < float('inf'), ' ' * 2, '|' * 2).view('<U1')
         maze_array[:, -1] = '|'
 
         mesh_rows, mesh_cols = np.meshgrid(np.arange(0, maze_array.shape[0], 2), np.arange(0, maze_array.shape[1], 4))
@@ -92,7 +95,9 @@ class TkRectCanvas(ViewBase):
 
     WALLS_TAG = 'maze_walls'
     PATH_TAG = 'path'
-    SYMBOLS_TAG = 'symbols'
+    START_TAG = 'start_node'
+    FINISH_TAG = 'finish_node'
+    SYMBOL_TAG = 'symbol_node'
 
     BG_COLOUR = 'gray90'
 
@@ -159,13 +164,13 @@ class TkRectCanvas(ViewBase):
 
     def draw_agent(self, node, direction):
         match direction:
-            case Directions.N:
+            case Direction.N:
                 agent = np.matmul(self.AGENT_TEMPLATE, np.array([[1, 0], [0, 1]]))  # North (identity)
-            case Directions.E:
+            case Direction.E:
                 agent = np.matmul(self.AGENT_TEMPLATE, np.array([[0, 1], [-1, 0]]))  # East
-            case Directions.S:
+            case Direction.S:
                 agent = np.matmul(self.AGENT_TEMPLATE, np.array([[0, 1], [1, 0]]))  # South
-            case Directions.W:
+            case Direction.W:
                 agent = np.matmul(self.AGENT_TEMPLATE, np.array([[0, -1], [1, 0]]))  # West
             case _:
                 raise RuntimeError(f"{direction=}")
@@ -177,18 +182,18 @@ class TkRectCanvas(ViewBase):
 
     def _draw_wall(self, node, direction):
         match direction:
-            case Directions.N:
+            case Direction.N:
                 line_origin = node
-                line_dest = self.maze.move(node, Directions.E)
-            case Directions.W:
+                line_dest = self.maze.move(node, Direction.E)
+            case Direction.W:
                 line_origin = node
-                line_dest = self.maze.move(node, Directions.S)
-            case Directions.S:
-                line_origin = self.maze.move(node, Directions.S)
-                line_dest = self.maze.move(self.maze.move(node, Directions.E), Directions.S)
-            case Directions.E:
-                line_origin = self.maze.move(node, Directions.E)
-                line_dest = self.maze.move(self.maze.move(node, Directions.E), Directions.S)
+                line_dest = self.maze.move(node, Direction.S)
+            case Direction.S:
+                line_origin = self.maze.move(node, Direction.S)
+                line_dest = self.maze.move(self.maze.move(node, Direction.E), Direction.S)
+            case Direction.E:
+                line_origin = self.maze.move(node, Direction.E)
+                line_dest = self.maze.move(self.maze.move(node, Direction.E), Direction.S)
             case _:
                 raise RuntimeError(f"{direction=}")
         line_origin_px = self.rc_to_xy(line_origin, align=tk.NW)
@@ -200,41 +205,35 @@ class TkRectCanvas(ViewBase):
         if maze:
             self.maze = maze
 
-        self.delete_walls()
-
+        self.canvas.delete(self.WALLS_TAG)
         if not self.maze:
-            return
+            return 1
 
         for i in range(self.maze.rows):
             for j in range(self.maze.cols):
-                if self.maze.is_wall((i, j), Directions.N):
-                    self._draw_wall((i, j), Directions.N)
-                if self.maze.is_wall((i, j), Directions.W):
-                    self._draw_wall((i, j), Directions.W)
+                if self.maze.is_wall((i, j), Direction.N):
+                    self._draw_wall((i, j), Direction.N)
+                if self.maze.is_wall((i, j), Direction.W):
+                    self._draw_wall((i, j), Direction.W)
         for i in range(self.maze.rows):
-            if self.maze.is_wall((i, self.maze.cols - 1), Directions.E):
-                self._draw_wall((i, self.maze.cols - 1), Directions.E)
+            if self.maze.is_wall((i, self.maze.cols - 1), Direction.E):
+                self._draw_wall((i, self.maze.cols - 1), Direction.E)
         for j in range(self.maze.cols):
-            if self.maze.is_wall((self.maze.rows - 1, j), Directions.S):
-                self._draw_wall((self.maze.rows - 1, j), Directions.S)
-
-    def delete_walls(self):
-        self.canvas.delete(self.WALLS_TAG)
+            if self.maze.is_wall((self.maze.rows - 1, j), Direction.S):
+                self._draw_wall((self.maze.rows - 1, j), Direction.S)
 
     def draw_path(self, path: list[Node] = None):
         if path:
             self.path = path
 
         self.delete_path()
-
         if not self.path:
-            self.path_is_drawn = False
-            return
-        self.path_is_drawn = True
+            return 1
 
+        self.path_is_drawn = True
         for node in self.path:
-            self.colour_node(node, 'gray70', tag=self.PATH_TAG)
-        self.canvas.tag_lower(self.PATH_TAG, self.WALLS_TAG)
+            self.colour_node(node, 'gray70', tags=self.PATH_TAG)
+        self.canvas.tag_lower(self.PATH_TAG, self.SYMBOL_TAG)
 
     def delete_path(self):
         self.canvas.delete(self.PATH_TAG)
@@ -246,28 +245,46 @@ class TkRectCanvas(ViewBase):
         else:
             self.draw_path()
 
-    def draw_letter(self, node, letter=None):
+    def draw_letter(self, node: Node, letter: str = None, tags: str | list[str] = None):
+        if isinstance(tags, str):
+            tags = [tags]
         centre = np.array(self.rc_to_xy(node, align=tk.CENTER))
-        self.canvas.create_text(*centre, font="Times 10 bold", text=letter, tags=(self.SYMBOLS_TAG,))
+        self.canvas.create_text(*centre, font="Times 10 bold", text=letter, tags=tags)
 
-    def colour_node(self, node, colour, tag=None):
-        if tag is None:
-            tag = self.SYMBOLS_TAG
+    def colour_node(self, node: Node, colour: str = None, tags: str | list[str] = None):
+        if isinstance(tags, str):
+            tags = [tags]
         top_left = self.rc_to_xy(node, align=tk.NW)
         bottom_right = self.rc_to_xy(node, align=tk.SE)
 
-        return self.canvas.create_rectangle(*top_left, *bottom_right, fill=colour, width=0, tags=(tag,))
+        return self.canvas.create_rectangle(*top_left, *bottom_right, fill=colour, width=0, tags=tags)
+
+    def draw_start(self):
+        self.canvas.delete(self.START_TAG)
+        if not self.start:
+            return 1
+
+        self.colour_node(self.start, colour="green", tags=[self.START_TAG, self.SYMBOL_TAG])
+        self.draw_letter(self.start, letter="S", tags=[self.START_TAG, self.SYMBOL_TAG])
+        self.canvas.tag_lower(self.START_TAG, self.WALLS_TAG)
+
+    def draw_finish(self):
+        self.canvas.delete(self.FINISH_TAG)
+        if not self.finish:
+            return 1
+
+        self.colour_node(self.finish, colour="red", tags=[self.FINISH_TAG, self.SYMBOL_TAG])
+        self.draw_letter(self.finish, letter="F", tags=[self.FINISH_TAG, self.SYMBOL_TAG])
+        self.canvas.tag_lower(self.FINISH_TAG, self.WALLS_TAG)
 
     def draw_maze(self):
-        self.canvas.delete("all")
+        if self.draw_walls():
+            return
+        if self.draw_start():
+            return
+        if self.draw_finish():
+            return
         self.draw_path()
-        if self.start:
-            self.colour_node(self.start, colour="green")
-            self.draw_letter(self.start, letter="S")
-        if self.finish:
-            self.colour_node(self.finish, colour="red")
-            self.draw_letter(self.finish, letter="F")
-        self.draw_walls()
 
 
 class TkView(ViewBase):

@@ -1,9 +1,12 @@
 import logging
+from collections import deque
 
-from src.mazes.maze import Maze, Node
+from src.mazes.maze import (
+    Maze,
+    Node,
+)
 
 LOG = logging.getLogger('PathFinding')
-logging.basicConfig(level='INFO')
 LOG.setLevel('INFO')
 
 
@@ -38,7 +41,8 @@ def dijkstras_mapper(maze: Maze, start: Node) -> tuple[dict, dict]:
         current_node = min(frontier_set, key=lambda n: g_score[n])
         frontier_set.remove(current_node)
 
-        for node, cost in maze.get_neighbours(current_node):
+        for direction, node in maze.get_neighbours(current_node):
+            cost = maze.edge_cost(current_node, direction)
             if g_score[current_node] + cost < g_score[node]:
                 frontier_set.add(node)
                 g_score[node] = g_score[current_node] + cost
@@ -74,10 +78,9 @@ def weighted_a_star(maze: Maze, start: Node, finish: Node, *, weight: float = 2.
 
         frontier_set.remove(current_node)
 
-        for node, cost in maze.get_neighbours(current_node):
-            possible_g_score = g_score[current_node] + cost
+        for direction, node in maze.get_neighbours(current_node):
+            possible_g_score = g_score[current_node] + maze.edge_cost(current_node, direction)
             if possible_g_score < g_score[node]:
-                frontier_set.add(node)
                 g_score[node] = possible_g_score
                 f_score[node] = possible_g_score + maze.find_distance(node, finish) * weight
                 move_map[node] = current_node
@@ -87,23 +90,47 @@ def weighted_a_star(maze: Maze, start: Node, finish: Node, *, weight: float = 2.
                 if node not in frontier_set:
                     frontier_set.add(node)
 
-    raise RuntimeError(f"Could not find path from {start} to {finish}")
+    raise RuntimeError(f"Could not find path from {start} to {finish}: {move_map}")
 
 
 def breadth_first_search(maze: Maze, start: Node, finish: Node) -> tuple[dict, list[Node]]:
-    pass
+    frontier_queue = deque([start])
+
+    move_map = {node: None for node in maze.node_set}
+
+    g_score = {node: float('inf') for node in maze.node_set}
+    g_score[start] = 0
+
+    while frontier_queue:
+        current_node = frontier_queue.popleft()
+        if current_node == finish:
+            return g_score, reconstruct_path(move_map, finish)
+
+        for direction, node in maze.get_neighbours(current_node):
+            possible_g_score = g_score[current_node] + maze.edge_cost(current_node, direction)
+            if possible_g_score < g_score[node]:
+                g_score[node] = possible_g_score
+                move_map[node] = current_node
+
+                if node not in frontier_queue:
+                    frontier_queue.append(node)
+
+    raise RuntimeError(f"Could not find path from {start} to {finish}")
 
 
 def depth_first_search(maze: Maze, start: Node, finish: Node) -> tuple[dict, list[Node]]:
-    pass
+    return {}, []
 
 
 if __name__ == '__main__':
     from src.mazes.maze import RectangularMaze
-    from src.mazes.maze_views import AsciiView, TkView
+    from src.mazes.maze_views import (
+        AsciiView,
+        TkView,
+    )
     from src.mazes.maze_generation import iterative_backtrack as maze_maker
 
-    maze_solver = weighted_a_star
+    maze_solver = breadth_first_search
 
     MAZE_DIMS = (20, 40)
 
@@ -116,7 +143,7 @@ if __name__ == '__main__':
 
         for _ in range(int(MAZE_DIMS[0] * MAZE_DIMS[1] * 0.1)):
             start = maze.random_node()
-            for finish, _ in maze.get_neighbours(start):
+            for _, finish in maze.get_neighbours(start):
 
                 LOG.info(f"Beginning search at {start}")
                 g_scores, path = maze_solver(maze, start, finish)
