@@ -112,26 +112,50 @@ def breadth_first_search(maze: Maze, start: Node, finish: Node) -> tuple[dict, l
     raise RuntimeError(f"Could not find path from {start} to {finish}")
 
 
-def _dfs_recurse(maze: Maze, current_node: Node, finish: Node, move_map: dict) -> bool:
+def _dfs_recurse(maze: Maze, current_node: Node, finish: Node, g_score: dict, move_map: dict):
     if current_node == finish:
-        return True
+        return
 
     for direction, node in maze.get_neighbours(current_node):
         if node in move_map or maze.edge_cost(current_node, direction) == float('inf'):
             continue
         move_map[node] = current_node
-        if _dfs_recurse(maze, node, finish, move_map):
-            return True
+        g_score[node] = g_score[current_node] + maze.edge_cost(current_node, direction)
+        if _dfs_recurse(maze, node, finish, g_score, move_map):
+            return
 
-    return False
 
-
-def depth_first_search(maze: Maze, start: Node, finish: Node) -> tuple[dict, list[Node]]:
+def depth_first_search_recursive(maze: Maze, start: Node, finish: Node) -> tuple[dict, list[Node]]:
+    g_score = {start: 0}
     move_map = {start: None}
-    if not _dfs_recurse(maze, start, finish, move_map):
-        raise RuntimeError
+    _dfs_recurse(maze, start, finish, g_score, move_map)
+    if finish not in g_score:
+        raise RuntimeError(f"Could not find path from {start} to {finish}")
     path = reconstruct_path(move_map, finish)
-    return {finish: len(path)}, path
+    return g_score, path
+
+
+def depth_first_search_iterative(maze: Maze, start: Node, finish: Node) -> tuple[dict, list[Node]]:
+    frontier_stack = [start]
+
+    move_map = {start: None}
+    g_score = {start: 0}
+
+    while frontier_stack:
+        current_node = frontier_stack.pop()
+        if current_node == finish:
+            return g_score, reconstruct_path(move_map, finish)
+
+        for direction, node in maze.get_neighbours(current_node):
+            possible_g_score = g_score[current_node] + maze.edge_cost(current_node, direction)
+            if possible_g_score < g_score.get(node, float('inf')):
+                g_score[node] = possible_g_score
+                move_map[node] = current_node
+
+                if node not in frontier_stack:
+                    frontier_stack.append(node)
+
+    raise RuntimeError(f"Could not find path from {start} to {finish}")
 
 
 if __name__ == '__main__':
@@ -144,7 +168,7 @@ if __name__ == '__main__':
     )
     from src.mazes.maze_generation import wilsons as maze_maker
 
-    maze_solver = depth_first_search
+    maze_solver = depth_first_search_recursive
 
     MAZE_DIMS = (20, 40)
 

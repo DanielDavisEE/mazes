@@ -24,7 +24,8 @@ from src.mazes.maze_views import (
 from src.mazes.pathfinding import (
     a_star,
     breadth_first_search,
-    depth_first_search,
+    depth_first_search_iterative,
+    depth_first_search_recursive,
     dijkstras,
     weighted_a_star,
 )
@@ -37,7 +38,7 @@ GENERATION_ALGORITHMS = {
     "Prim's": prims,
     'Recursive Divison x': recursive_divison,
     'Aldous-Broder x': aldous_broder,
-    "Wilson's x": wilsons,
+    "Wilson's": wilsons,
     'Hunt and Kill x': hunt_and_kill,
     'Growing Tree x': growing_tree,
     'Binary Tree x': brinary_tree,
@@ -49,7 +50,8 @@ PATHFINDING_ALGORITHMS = {
     "A*": a_star,
     "Weighted A*": weighted_a_star,
     "Breadth First Search": breadth_first_search,
-    "Depth First Search x": depth_first_search,
+    "Depth First Search (Recursive)": depth_first_search_recursive,
+    "Depth First Search (Iterative)": depth_first_search_iterative,
 }
 
 
