@@ -33,8 +33,8 @@ def dijkstras_mapper(maze: Maze, start: Node) -> tuple[dict, dict]:
     """
     frontier_set = {start}
 
-    move_map = {node: None for node in maze.node_set}
-    g_score = {node: float('inf') for node in maze.node_set}
+    move_map = {start: None}
+    g_score = {}
     g_score[start] = 0
 
     while frontier_set:
@@ -43,7 +43,7 @@ def dijkstras_mapper(maze: Maze, start: Node) -> tuple[dict, dict]:
 
         for direction, node in maze.get_neighbours(current_node):
             cost = maze.edge_cost(current_node, direction)
-            if g_score[current_node] + cost < g_score[node]:
+            if g_score[current_node] + cost < g_score.get(node, float('inf')):
                 frontier_set.add(node)
                 g_score[node] = g_score[current_node] + cost
                 move_map[node] = current_node
@@ -62,13 +62,9 @@ def a_star(maze: Maze, start: Node, finish: Node, *, move_history: list = None) 
 def weighted_a_star(maze: Maze, start: Node, finish: Node, *, weight: float = 2.0, move_history: list = None) -> tuple[dict, list[Node]]:
     frontier_set = {start}
 
-    move_map = {node: None for node in maze.node_set}
-
-    g_score = {node: float('inf') for node in maze.node_set}
-    g_score[start] = 0
-
-    f_score = {node: float('inf') for node in maze.node_set}
-    f_score[start] = maze.find_distance(start, finish) * weight
+    move_map = {start: None}
+    g_score = {start: 0}
+    f_score = {start: maze.find_distance(start, finish) * weight}
 
     while frontier_set:
         # Possibility for optimisation here by using a heap/priority queue instead of a set ( O(n) -> O(log(n)) )
@@ -80,7 +76,7 @@ def weighted_a_star(maze: Maze, start: Node, finish: Node, *, weight: float = 2.
 
         for direction, node in maze.get_neighbours(current_node):
             possible_g_score = g_score[current_node] + maze.edge_cost(current_node, direction)
-            if possible_g_score < g_score[node]:
+            if possible_g_score < g_score.get(node, float('inf')):
                 g_score[node] = possible_g_score
                 f_score[node] = possible_g_score + maze.find_distance(node, finish) * weight
                 move_map[node] = current_node
@@ -96,10 +92,8 @@ def weighted_a_star(maze: Maze, start: Node, finish: Node, *, weight: float = 2.
 def breadth_first_search(maze: Maze, start: Node, finish: Node) -> tuple[dict, list[Node]]:
     frontier_queue = deque([start])
 
-    move_map = {node: None for node in maze.node_set}
-
-    g_score = {node: float('inf') for node in maze.node_set}
-    g_score[start] = 0
+    move_map = {start: None}
+    g_score = {start: 0}
 
     while frontier_queue:
         current_node = frontier_queue.popleft()
@@ -108,7 +102,7 @@ def breadth_first_search(maze: Maze, start: Node, finish: Node) -> tuple[dict, l
 
         for direction, node in maze.get_neighbours(current_node):
             possible_g_score = g_score[current_node] + maze.edge_cost(current_node, direction)
-            if possible_g_score < g_score[node]:
+            if possible_g_score < g_score.get(node, float('inf')):
                 g_score[node] = possible_g_score
                 move_map[node] = current_node
 
@@ -118,42 +112,67 @@ def breadth_first_search(maze: Maze, start: Node, finish: Node) -> tuple[dict, l
     raise RuntimeError(f"Could not find path from {start} to {finish}")
 
 
+def _dfs_recurse(maze: Maze, current_node: Node, finish: Node, move_map: dict) -> bool:
+    if current_node == finish:
+        return True
+
+    for direction, node in maze.get_neighbours(current_node):
+        if node in move_map or maze.edge_cost(current_node, direction) == float('inf'):
+            continue
+        move_map[node] = current_node
+        if _dfs_recurse(maze, node, finish, move_map):
+            return True
+
+    return False
+
+
 def depth_first_search(maze: Maze, start: Node, finish: Node) -> tuple[dict, list[Node]]:
-    return {}, []
+    move_map = {start: None}
+    if not _dfs_recurse(maze, start, finish, move_map):
+        raise RuntimeError
+    path = reconstruct_path(move_map, finish)
+    return {finish: len(path)}, path
 
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO)
+
     from src.mazes.maze import RectangularMaze
     from src.mazes.maze_views import (
         AsciiView,
         TkView,
     )
-    from src.mazes.maze_generation import iterative_backtrack as maze_maker
+    from src.mazes.maze_generation import wilsons as maze_maker
 
-    maze_solver = breadth_first_search
+    maze_solver = depth_first_search
 
     MAZE_DIMS = (20, 40)
 
-    minimum_path_cost = MAZE_DIMS[0] * MAZE_DIMS[1] * 0.3
+    minimum_path_cost = MAZE_DIMS[0] * MAZE_DIMS[1] * 0.1
     finish_score = 0
+    maze_count = 0
+    solve_count = 0
 
     while finish_score < minimum_path_cost:
         maze = RectangularMaze(MAZE_DIMS)
         maze_maker(maze)
+        maze_count += 1
 
         for _ in range(int(MAZE_DIMS[0] * MAZE_DIMS[1] * 0.1)):
+            solve_count += 1
             start = maze.random_node()
             for _, finish in maze.get_neighbours(start):
 
-                LOG.info(f"Beginning search at {start}")
+                LOG.debug(f"Beginning search at {start}")
                 g_scores, path = maze_solver(maze, start, finish)
                 finish_score = g_scores[finish]
 
-                LOG.info(f"Reached {finish} with a cost of {finish_score}")
+                LOG.debug(f"Reached {finish} with a cost of {finish_score}")
                 if finish_score >= minimum_path_cost:
                     break
             if finish_score >= minimum_path_cost:
                 break
 
+    LOG.info(f"Attempted {solve_count} solves on {maze_count} mazes")
     AsciiView(maze, start, finish, path)
     TkView(maze, start, finish, path)

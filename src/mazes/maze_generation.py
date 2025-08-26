@@ -109,7 +109,7 @@ def aldous_broder(maze: Maze, *, loop_chance: float = 0.0, move_history: list = 
 
 
 def wilsons(maze: Maze, *, loop_chance: float = 0.0, move_history: list = None):
-    # TODO: Fix this, I'm tired
+    # TODO: Tidy up function
     LOG.info('Creating maze using `wilsons`')
     directions = np.array(Direction)
 
@@ -142,9 +142,11 @@ def wilsons(maze: Maze, *, loop_chance: float = 0.0, move_history: list = None):
 
                 walk_root = node
 
-            # TODO: Choose better, at the end all nodes are in visited set
-            while walk_root in visited_set:
-                walk_root = current_node = maze.random_node()
+            if len(visited_set) >= len(maze.node_set):
+                break
+
+            r, c = rng.choice(np.argwhere((maze.maze_array >= float('inf')).all(axis=2)))
+            walk_root = current_node = int(r), int(c)
 
 
 def hunt_and_kill(maze: Maze, *, loop_chance: float = 0.0, move_history: list = None):
@@ -173,4 +175,4 @@ if __name__ == '__main__':
 
     wilsons(maze)
 
-    print(AsciiView(maze))
+    AsciiView(maze)
