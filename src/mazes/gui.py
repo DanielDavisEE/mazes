@@ -31,18 +31,18 @@ from src.mazes.pathfinding import (
 )
 
 GENERATION_ALGORITHMS = {
-    'Iterative Backtrack': iterative_backtrack,
-    'Recursive Backtrack': recursive_backtrack,
+    "Iterative Backtrack": iterative_backtrack,
+    "Recursive Backtrack": recursive_backtrack,
     "Ellers x": ellers,
     "Kruskal's x": kruskals,
     "Prim's": prims,
-    'Recursive Divison x': recursive_divison,
-    'Aldous-Broder x': aldous_broder,
+    "Recursive Divison x": recursive_divison,
+    "Aldous-Broder x": aldous_broder,
     "Wilson's": wilsons,
-    'Hunt and Kill x': hunt_and_kill,
-    'Growing Tree x': growing_tree,
-    'Binary Tree x': brinary_tree,
-    'Sidewinder x': sidewinder,
+    "Hunt and Kill x": hunt_and_kill,
+    "Growing Tree x": growing_tree,
+    "Binary Tree x": brinary_tree,
+    "Sidewinder x": sidewinder,
 }
 
 PATHFINDING_ALGORITHMS = {
@@ -69,12 +69,18 @@ class MazeGui:
         self.frame = ttk.Frame(self.root)
         self.frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
-        self.rows_tk = tk.IntVar(value=15, name='RowCount')
-        self.cols_tk = tk.IntVar(value=30, name='ColCount')
-        self.plot_path_tk = tk.BooleanVar(value=True, name='PlotPath')
-        self.visualise_generation_tk = tk.BooleanVar(value=False, name='VisualiseGeneration')
-        self.generation_algorithm_tk = tk.StringVar(value='Iterative Backtrack', name='GenerationAlgorithm')
-        self.pathfinding_algorithm_tk = tk.StringVar(value='A*', name='PathfindingAlgorithm')
+        self.rows_tk = tk.IntVar(value=15, name="RowCount")
+        self.cols_tk = tk.IntVar(value=30, name="ColCount")
+        self.plot_path_tk = tk.BooleanVar(value=True, name="PlotPath")
+        self.visualise_generation_tk = tk.BooleanVar(
+            value=False, name="VisualiseGeneration"
+        )
+        self.generation_algorithm_tk = tk.StringVar(
+            value="Iterative Backtrack", name="GenerationAlgorithm"
+        )
+        self.pathfinding_algorithm_tk = tk.StringVar(
+            value="A*", name="PathfindingAlgorithm"
+        )
 
         self.maze = RectangularMaze.blank_maze((self.rows_tk.get(), self.cols_tk.get()))
 
@@ -84,20 +90,44 @@ class MazeGui:
         self.options_frame = ttk.Frame(self.frame)
         self.options_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
-        ttk.Button(self.options_frame, text='Generate', command=self.generate_custom_maze).pack(
-            side=tk.LEFT, fill=tk.BOTH, expand=False, padx=5, pady=5, ipadx=5, ipady=5)
-        ttk.Checkbutton(self.options_frame, text='Show Solution', variable=self.plot_path_tk, command=self.view.toggle_path).pack(
-            side=tk.LEFT, fill=tk.BOTH, expand=False, padx=5, pady=5, ipadx=5, ipady=5)
-        ttk.Checkbutton(self.options_frame, text='Visualise Generation', variable=self.visualise_generation_tk).pack(
-            side=tk.LEFT, fill=tk.BOTH, expand=False, padx=5, pady=5, ipadx=5, ipady=5)
-        ttk.Combobox(self.options_frame, textvariable=self.generation_algorithm_tk, values=list(GENERATION_ALGORITHMS.keys())).pack(
-            side=tk.LEFT, fill=tk.BOTH, expand=False, padx=5, pady=5, ipadx=5, ipady=5)
-        ttk.Combobox(self.options_frame, textvariable=self.pathfinding_algorithm_tk, values=list(PATHFINDING_ALGORITHMS.keys())).pack(
-            side=tk.LEFT, fill=tk.BOTH, expand=False, padx=5, pady=5, ipadx=5, ipady=5)
+        ttk.Button(
+            self.options_frame, text="Generate", command=self.generate_custom_maze
+        ).pack(
+            side=tk.LEFT, fill=tk.BOTH, expand=False, padx=5, pady=5, ipadx=5, ipady=5
+        )
+        ttk.Checkbutton(
+            self.options_frame,
+            text="Show Solution",
+            variable=self.plot_path_tk,
+            command=self.view.toggle_path,
+        ).pack(
+            side=tk.LEFT, fill=tk.BOTH, expand=False, padx=5, pady=5, ipadx=5, ipady=5
+        )
+        ttk.Checkbutton(
+            self.options_frame,
+            text="Visualise Generation",
+            variable=self.visualise_generation_tk,
+        ).pack(
+            side=tk.LEFT, fill=tk.BOTH, expand=False, padx=5, pady=5, ipadx=5, ipady=5
+        )
+        ttk.Combobox(
+            self.options_frame,
+            textvariable=self.generation_algorithm_tk,
+            values=list(GENERATION_ALGORITHMS.keys()),
+        ).pack(
+            side=tk.LEFT, fill=tk.BOTH, expand=False, padx=5, pady=5, ipadx=5, ipady=5
+        )
+        ttk.Combobox(
+            self.options_frame,
+            textvariable=self.pathfinding_algorithm_tk,
+            values=list(PATHFINDING_ALGORITHMS.keys()),
+        ).pack(
+            side=tk.LEFT, fill=tk.BOTH, expand=False, padx=5, pady=5, ipadx=5, ipady=5
+        )
 
         # Configure window size and placement
         self.root.resizable(True, True)
-        self.root.eval('tk::PlaceWindow . center')
+        self.root.eval("tk::PlaceWindow . center")
         self.root.minsize(self.root.winfo_width(), self.root.winfo_height())
 
     @property

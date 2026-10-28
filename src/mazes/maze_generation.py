@@ -9,7 +9,7 @@ from src.mazes.maze import (
     rng,
 )
 
-LOG = logging.getLogger('MazeGeneration')
+LOG = logging.getLogger("MazeGeneration")
 LOG.setLevel(logging.DEBUG)
 
 
@@ -19,14 +19,16 @@ class Moves(IntEnum):
 
 
 def _is_visited(maze, node):
-    return (maze.maze_array[*node, :] < float('inf')).any()
+    return (maze.maze_array[*node, :] < float("inf")).any()
 
 
-def recursive_backtrack(maze, current_node=None, *, loop_chance: float = 0.0, move_history: list = None):
-    LOG.debug('Creating maze using `recursive_backtrack`')
+def recursive_backtrack(
+    maze, current_node=None, *, loop_chance: float = 0.0, move_history: list = None
+):
+    LOG.debug("Creating maze using `recursive_backtrack`")
     if current_node is None:
         current_node = maze.random_node()
-    LOG.debug(f'Visiting node: {current_node}')
+    LOG.debug(f"Visiting node: {current_node}")
     if move_history:
         move_history.append((current_node, Moves.Visit))
 
@@ -43,14 +45,16 @@ def recursive_backtrack(maze, current_node=None, *, loop_chance: float = 0.0, mo
         move_history.append((current_node, Moves.Complete))
 
 
-def iterative_backtrack(maze: Maze, loop_chance: float = 0.0, move_history: list = None):
-    LOG.info('Creating maze using `iterative_backtrack`')
+def iterative_backtrack(
+    maze: Maze, loop_chance: float = 0.0, move_history: list = None
+):
+    LOG.info("Creating maze using `iterative_backtrack`")
     current_node = maze.random_node()
     move_stack = [current_node]
     directions = np.array(Direction)
 
     while move_stack:
-        LOG.debug(f'Visiting node: {current_node}')
+        LOG.debug(f"Visiting node: {current_node}")
         if move_history:
             move_history.append((current_node, Moves.Visit))
 
@@ -80,9 +84,12 @@ def kruskals(maze: Maze, *, loop_chance: float = 0.0, move_history: list = None)
 
 
 def prims(maze: Maze, *, loop_chance: float = 0.0, move_history: list = None):
-    LOG.info('Creating maze using `prims`')
+    LOG.info("Creating maze using `prims`")
     current_node = maze.random_node()
-    frontier_set = {(current_node, direction): rng.random() for direction, _ in maze.get_neighbours(current_node)}
+    frontier_set = {
+        (current_node, direction): rng.random()
+        for direction, _ in maze.get_neighbours(current_node)
+    }
     visited_set = {current_node}
 
     while frontier_set:
@@ -92,7 +99,7 @@ def prims(maze: Maze, *, loop_chance: float = 0.0, move_history: list = None):
         current_node = maze.move(*wall)
         if current_node in visited_set:
             continue
-        LOG.debug(f'Visiting {current_node}')
+        LOG.debug(f"Visiting {current_node}")
         maze.remove_wall(*wall)
         visited_set.add(current_node)
 
@@ -100,7 +107,9 @@ def prims(maze: Maze, *, loop_chance: float = 0.0, move_history: list = None):
             frontier_set[(current_node, direction)] = rng.random()
 
 
-def recursive_divison(maze: Maze, *, loop_chance: float = 0.0, move_history: list = None):
+def recursive_divison(
+    maze: Maze, *, loop_chance: float = 0.0, move_history: list = None
+):
     pass
 
 
@@ -110,19 +119,19 @@ def aldous_broder(maze: Maze, *, loop_chance: float = 0.0, move_history: list = 
 
 def wilsons(maze: Maze, *, loop_chance: float = 0.0, move_history: list = None):
     # TODO: Tidy up function
-    LOG.info('Creating maze using `wilsons`')
+    LOG.info("Creating maze using `wilsons`")
     directions = np.array(Direction)
 
     walk_root = maze.random_node()
     visited_set = {walk_root}
-    LOG.debug(f'Starting at {walk_root}')
+    LOG.debug(f"Starting at {walk_root}")
 
     while walk_root in visited_set:
         walk_root = current_node = maze.random_node()
     walk_map = {}
 
     while len(visited_set) < len(maze.node_set):
-        LOG.debug(f'Visiting {current_node}')
+        LOG.debug(f"Visiting {current_node}")
         rng.shuffle(directions)
         for direction in directions:
             direction = Direction(direction)
@@ -145,7 +154,9 @@ def wilsons(maze: Maze, *, loop_chance: float = 0.0, move_history: list = None):
             if len(visited_set) >= len(maze.node_set):
                 break
 
-            r, c = rng.choice(np.argwhere((maze.maze_array >= float('inf')).all(axis=2)))
+            r, c = rng.choice(
+                np.argwhere((maze.maze_array >= float("inf")).all(axis=2))
+            )
             walk_root = current_node = int(r), int(c)
 
 
@@ -165,7 +176,7 @@ def sidewinder(maze: Maze, *, loop_chance: float = 0.0, move_history: list = Non
     pass
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
 
     from src.mazes.maze import RectangularMaze

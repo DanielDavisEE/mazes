@@ -73,8 +73,10 @@ class RectangularMaze(Maze):
         self.rows = dimensions[0]
         self.cols = dimensions[1]
 
-        self.maze_array = np.ones((*dimensions, 4)) * float('inf')
-        self.node_set: set[Node] = set([(i, j) for i in range(self.rows) for j in range(self.cols)])
+        self.maze_array = np.ones((*dimensions, 4)) * float("inf")
+        self.node_set: set[Node] = set(
+            [(i, j) for i in range(self.rows) for j in range(self.cols)]
+        )
 
         if generation_alg:
             generation_alg(self)
@@ -93,7 +95,7 @@ class RectangularMaze(Maze):
         return self.maze_array[*node, direction.value]
 
     def is_wall(self, node: Node, direction: Direction) -> bool:
-        return self.edge_cost(node, direction) == float('inf')
+        return self.edge_cost(node, direction) == float("inf")
 
     def remove_wall(self, node: Node, direction: Direction):
         if isinstance(direction, (int, np.int64)):
@@ -105,8 +107,14 @@ class RectangularMaze(Maze):
             self.maze_array[*dest_node, direction.flip().value] = 1
 
     def get_neighbours(self, node: Node) -> list[tuple[Direction, Node]]:
-        possible_nodes = [(direction, self.move(node, direction)) for direction in Direction]
-        return [(direction, node) for direction, node in possible_nodes if node in self.node_set]
+        possible_nodes = [
+            (direction, self.move(node, direction)) for direction in Direction
+        ]
+        return [
+            (direction, node)
+            for direction, node in possible_nodes
+            if node in self.node_set
+        ]
 
     def random_node(self) -> Node:
         row, col = tuple(rng.integers((self.rows, self.cols), size=2))
@@ -114,5 +122,5 @@ class RectangularMaze(Maze):
 
     def find_distance(self, node_a: Node, node_b: Node) -> float:
         if node_a not in self.node_set or node_b not in self.node_set:
-            self.log.warning(f'Invalid node input: {node_a}, {node_b}')
+            self.log.warning(f"Invalid node input: {node_a}, {node_b}")
         return np.abs(np.array(node_a) - np.array(node_b)).sum()
