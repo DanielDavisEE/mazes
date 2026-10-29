@@ -52,13 +52,13 @@ def dijkstras_mapper(maze: Maze, start: Node) -> tuple[dict, dict]:
 
 
 def dijkstras(
-    maze: Maze, start: Node, finish: Node, *, move_history: list = None
+    maze: Maze, start: Node, finish: Node, *, move_history: list | None = None
 ) -> tuple[dict, list[Node]]:
     return weighted_a_star(maze, start, finish, weight=0, move_history=move_history)
 
 
 def a_star(
-    maze: Maze, start: Node, finish: Node, *, move_history: list = None
+    maze: Maze, start: Node, finish: Node, *, move_history: list | None = None
 ) -> tuple[dict, list[Node]]:
     return weighted_a_star(maze, start, finish, weight=1, move_history=move_history)
 
@@ -69,7 +69,7 @@ def weighted_a_star(
     finish: Node,
     *,
     weight: float = 2.0,
-    move_history: list = None,
+    move_history: list | None = None,
 ) -> tuple[dict, list[Node]]:
     frontier_set = {start}
 

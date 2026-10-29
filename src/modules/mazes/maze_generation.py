@@ -22,7 +22,11 @@ def _is_visited(maze, node):
 
 
 def recursive_backtrack(
-    maze, current_node=None, *, loop_chance: float = 0.0, move_history: list = None
+    maze,
+    current_node=None,
+    *,
+    loop_chance: float = 0.0,
+    move_history: list | None = None,
 ):
     LOG.debug("Creating maze using `recursive_backtrack`")
     if current_node is None:
@@ -35,17 +39,20 @@ def recursive_backtrack(
     rng.shuffle(directions)
     for direction in directions:
         next_node = maze.move(current_node, direction)
-        if next_node in maze.node_set:  # Is it a legal node?
-            # Is it an unvisited node, or should we randomly add a loop?
-            if not _is_visited(maze, next_node) or rng.random() < loop_chance:
-                maze.remove_wall(current_node, direction)
-                recursive_backtrack(maze, next_node, move_history=move_history)
+        if next_node not in maze.node_set:  # Is it a legal node?
+            continue
+
+        # Is it an unvisited node, or should we randomly add a loop?
+        if not _is_visited(maze, next_node) or rng.random() < loop_chance:
+            maze.remove_wall(current_node, direction)
+            recursive_backtrack(maze, next_node, move_history=move_history)
+
     if move_history:
         move_history.append((current_node, Moves.Complete))
 
 
 def iterative_backtrack(
-    maze: Maze, loop_chance: float = 0.0, move_history: list = None
+    maze: Maze, loop_chance: float = 0.0, move_history: list | None = None
 ):
     LOG.info("Creating maze using `iterative_backtrack`")
     current_node = maze.random_node()
@@ -60,13 +67,16 @@ def iterative_backtrack(
         rng.shuffle(directions)
         for direction in directions:
             next_node = maze.move(current_node, direction)
-            if next_node in maze.node_set:  # Is it a legal node?
-                # Is it an unvisited node, or should we randomly add a loop?
-                if not _is_visited(maze, next_node) or rng.random() < loop_chance:
-                    maze.remove_wall(current_node, direction)
-                    move_stack.append(current_node)
-                    current_node = next_node
-                    break
+            if next_node not in maze.node_set:  # Is it a legal node?
+                continue
+
+            # Is it an unvisited node, or should we randomly add a loop?
+            if not _is_visited(maze, next_node) or rng.random() < loop_chance:
+                maze.remove_wall(current_node, direction)
+                move_stack.append(current_node)
+                current_node = next_node
+                break
+
         else:  # Didn't break, backtrack
             current_node = move_stack.pop()
             if move_history:
@@ -74,15 +84,15 @@ def iterative_backtrack(
             continue
 
 
-def ellers(maze: Maze, *, loop_chance: float = 0.0, move_history: list = None):
+def ellers(maze: Maze, *, loop_chance: float = 0.0, move_history: list | None = None):
     pass
 
 
-def kruskals(maze: Maze, *, loop_chance: float = 0.0, move_history: list = None):
+def kruskals(maze: Maze, *, loop_chance: float = 0.0, move_history: list | None = None):
     pass
 
 
-def prims(maze: Maze, *, loop_chance: float = 0.0, move_history: list = None):
+def prims(maze: Maze, *, loop_chance: float = 0.0, move_history: list | None = None):
     LOG.info("Creating maze using `prims`")
     current_node = maze.random_node()
     frontier_set = {
@@ -107,16 +117,18 @@ def prims(maze: Maze, *, loop_chance: float = 0.0, move_history: list = None):
 
 
 def recursive_divison(
-    maze: Maze, *, loop_chance: float = 0.0, move_history: list = None
+    maze: Maze, *, loop_chance: float = 0.0, move_history: list | None = None
 ):
     pass
 
 
-def aldous_broder(maze: Maze, *, loop_chance: float = 0.0, move_history: list = None):
+def aldous_broder(
+    maze: Maze, *, loop_chance: float = 0.0, move_history: list | None = None
+):
     pass
 
 
-def wilsons(maze: Maze, *, loop_chance: float = 0.0, move_history: list = None):
+def wilsons(maze: Maze, *, loop_chance: float = 0.0, move_history: list | None = None):
     # TODO: Tidy up function
     LOG.info("Creating maze using `wilsons`")
     directions = np.array(Direction)
@@ -159,27 +171,35 @@ def wilsons(maze: Maze, *, loop_chance: float = 0.0, move_history: list = None):
             walk_root = current_node = int(r), int(c)
 
 
-def hunt_and_kill(maze: Maze, *, loop_chance: float = 0.0, move_history: list = None):
+def hunt_and_kill(
+    maze: Maze, *, loop_chance: float = 0.0, move_history: list | None = None
+):
     pass
 
 
-def growing_tree(maze: Maze, *, loop_chance: float = 0.0, move_history: list = None):
+def growing_tree(
+    maze: Maze, *, loop_chance: float = 0.0, move_history: list | None = None
+):
     pass
 
 
-def brinary_tree(maze: Maze, *, loop_chance: float = 0.0, move_history: list = None):
+def brinary_tree(
+    maze: Maze, *, loop_chance: float = 0.0, move_history: list | None = None
+):
     pass
 
 
-def sidewinder(maze: Maze, *, loop_chance: float = 0.0, move_history: list = None):
+def sidewinder(
+    maze: Maze, *, loop_chance: float = 0.0, move_history: list | None = None
+):
     pass
 
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
 
-    from src.mazes.maze import RectangularMaze
-    from src.mazes.maze_views import AsciiView
+    from maze import RectangularMaze
+    from maze_views import AsciiView
 
     maze = RectangularMaze((10, 10))
 

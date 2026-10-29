@@ -264,7 +264,7 @@ class TkMazeCanvas(MazeViewBase):
             if self.maze.is_wall((self.maze.rows - 1, j), Direction.S):
                 self._draw_wall((self.maze.rows - 1, j), Direction.S)
 
-    def draw_path(self, path: list[Node] = None):
+    def draw_path(self, path: list[Node] | None = None):
         if path:
             self.path = path
 
@@ -287,13 +287,17 @@ class TkMazeCanvas(MazeViewBase):
         else:
             self.draw_path()
 
-    def draw_letter(self, node: Node, letter: str = None, tags: str | list[str] = None):
+    def draw_letter(
+        self, node: Node, letter: str | None = None, tags: str | list[str] | None = None
+    ):
         if isinstance(tags, str):
             tags = [tags]
         centre = np.array(self.rc_to_xy(node, align=tk.CENTER))
         self.canvas.create_text(*centre, font="Times 10 bold", text=letter, tags=tags)
 
-    def colour_node(self, node: Node, colour: str = None, tags: str | list[str] = None):
+    def colour_node(
+        self, node: Node, colour: str | None = None, tags: str | list[str] | None = None
+    ):
         if isinstance(tags, str):
             tags = [tags]
         top_left = self.rc_to_xy(node, align=tk.NW)

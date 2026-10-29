@@ -19,7 +19,7 @@ class TkViewBase(ViewBase):
 class TkGui:
     """Minimal constructor for displaying a maze with Tk"""
 
-    def __init__(self, views: list[TkViewBase] = None, *args, **kwargs):
+    def __init__(self, views: list[TkViewBase], *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         if views is None:

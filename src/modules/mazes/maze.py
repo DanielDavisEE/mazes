@@ -78,9 +78,9 @@ class RectangularMaze(Maze):
         self.cols = dimensions[1]
 
         self.maze_array = np.ones((*dimensions, 4)) * float("inf")
-        self.node_set: set[Node] = set(
-            [(i, j) for i in range(self.rows) for j in range(self.cols)]
-        )
+        self.node_set: set[Node] = {
+            (i, j) for i in range(self.rows) for j in range(self.cols)
+        }
 
         if generation_alg:
             generation_alg(self)
