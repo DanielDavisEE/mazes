@@ -1,13 +1,12 @@
-import logging
 import tkinter as tk
 from tkinter import ttk
 
 import numpy as np
-
 from maze import (
     Direction,
     Node,
 )
+
 from modules.gui_utils import ViewBase
 
 
@@ -171,14 +170,14 @@ class TkMazeCanvas(MazeViewBase):
             self.canvas.destroy()
 
         width_px = (
-                self.maze.cols * (self.SQUARE_PX + self.LINE_WIDTH)
-                + self.LINE_WIDTH
-                + 2 * self.MARGIN
+            self.maze.cols * (self.SQUARE_PX + self.LINE_WIDTH)
+            + self.LINE_WIDTH
+            + 2 * self.MARGIN
         )
         height_px = (
-                self.maze.rows * (self.SQUARE_PX + self.LINE_WIDTH)
-                + self.LINE_WIDTH
-                + 2 * self.MARGIN
+            self.maze.rows * (self.SQUARE_PX + self.LINE_WIDTH)
+            + self.LINE_WIDTH
+            + 2 * self.MARGIN
         )
 
         self.log.debug(f"Creating canvas {width_px}x{height_px}")

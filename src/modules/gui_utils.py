@@ -18,6 +18,7 @@ class TkViewBase(ViewBase):
 
 class TkGui:
     """Minimal constructor for displaying a maze with Tk"""
+
     def __init__(self, views: list[TkViewBase] = None, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -42,6 +43,6 @@ class TkGui:
         self.root.mainloop()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     gui = TkGui()
     gui.run()
