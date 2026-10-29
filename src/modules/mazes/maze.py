@@ -33,6 +33,10 @@ Node = tuple[int, int]
 class Maze(ABC):
     node_set: set
 
+    start: Node
+    finish: Node
+    path: list[Node]
+
     def __init__(self):
         self.log = logging.getLogger(self.__class__.__name__)
         self.log.setLevel(logging.DEBUG)

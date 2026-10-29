@@ -1,7 +1,8 @@
 import logging
 from collections import deque
+from collections.abc import Callable
 
-from src.mazes.maze import (
+from maze import (
     Maze,
     Node,
 )
@@ -52,24 +53,24 @@ def dijkstras_mapper(maze: Maze, start: Node) -> tuple[dict, dict]:
 
 
 def dijkstras(
-    maze: Maze, start: Node, finish: Node, *, move_history: list = None
+        maze: Maze, start: Node, finish: Node, *, move_history: list = None
 ) -> tuple[dict, list[Node]]:
     return weighted_a_star(maze, start, finish, weight=0, move_history=move_history)
 
 
 def a_star(
-    maze: Maze, start: Node, finish: Node, *, move_history: list = None
+        maze: Maze, start: Node, finish: Node, *, move_history: list = None
 ) -> tuple[dict, list[Node]]:
     return weighted_a_star(maze, start, finish, weight=1, move_history=move_history)
 
 
 def weighted_a_star(
-    maze: Maze,
-    start: Node,
-    finish: Node,
-    *,
-    weight: float = 2.0,
-    move_history: list = None,
+        maze: Maze,
+        start: Node,
+        finish: Node,
+        *,
+        weight: float = 2.0,
+        move_history: list = None,
 ) -> tuple[dict, list[Node]]:
     frontier_set = {start}
 
@@ -92,7 +93,7 @@ def weighted_a_star(
             if possible_g_score < g_score.get(node, float("inf")):
                 g_score[node] = possible_g_score
                 f_score[node] = (
-                    possible_g_score + maze.find_distance(node, finish) * weight
+                        possible_g_score + maze.find_distance(node, finish) * weight
                 )
                 move_map[node] = current_node
 
@@ -105,7 +106,7 @@ def weighted_a_star(
 
 
 def breadth_first_search(
-    maze: Maze, start: Node, finish: Node
+        maze: Maze, start: Node, finish: Node
 ) -> tuple[dict, list[Node]]:
     frontier_queue = deque([start])
 
@@ -132,7 +133,7 @@ def breadth_first_search(
 
 
 def _dfs_recurse(
-    maze: Maze, current_node: Node, finish: Node, g_score: dict, move_map: dict
+        maze: Maze, current_node: Node, finish: Node, g_score: dict, move_map: dict
 ):
     if current_node == finish:
         return True
@@ -147,7 +148,7 @@ def _dfs_recurse(
 
 
 def depth_first_search_recursive(
-    maze: Maze, start: Node, finish: Node
+        maze: Maze, start: Node, finish: Node
 ) -> tuple[dict, list[Node]]:
     g_score = {start: 0}
     move_map = {start: None}
@@ -159,7 +160,7 @@ def depth_first_search_recursive(
 
 
 def depth_first_search_iterative(
-    maze: Maze, start: Node, finish: Node
+        maze: Maze, start: Node, finish: Node
 ) -> tuple[dict, list[Node]]:
     frontier_stack = [start]
 
@@ -186,7 +187,7 @@ def depth_first_search_iterative(
 
 
 def iterative_deepening_dfs(
-    maze: Maze, start: Node, finish: Node
+        maze: Maze, start: Node, finish: Node
 ) -> tuple[dict, list[Node]]:
     return {}, []
 
@@ -194,9 +195,9 @@ def iterative_deepening_dfs(
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
 
-    from src.mazes.maze import RectangularMaze
-    from src.mazes.maze_generation import wilsons as maze_maker
-    from src.mazes.maze_views import (
+    from maze import RectangularMaze
+    from maze_generation import wilsons as maze_maker
+    from maze_views import (
         AsciiView,
         TkView,
     )

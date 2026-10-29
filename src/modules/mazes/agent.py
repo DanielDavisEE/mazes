@@ -1,4 +1,4 @@
-from src.mazes.maze import Maze, Node, RectangularMaze
+from maze import Maze, Node, RectangularMaze
 
 
 class MazeAgent:

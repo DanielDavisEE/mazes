@@ -2,8 +2,8 @@ import logging
 import tkinter as tk
 from tkinter import ttk
 
-from src.mazes.maze import RectangularMaze
-from src.mazes.maze_generation import (
+from maze import RectangularMaze
+from maze_generation import (
     aldous_broder,
     brinary_tree,
     ellers,
@@ -17,11 +17,11 @@ from src.mazes.maze_generation import (
     sidewinder,
     wilsons,
 )
-from src.mazes.maze_views import (
+from maze_views import (
     AsciiView,
-    TkRectCanvas,
+    TkMazeCanvas,
 )
-from src.mazes.pathfinding import (
+from pathfinding import (
     a_star,
     breadth_first_search,
     depth_first_search_iterative,
@@ -84,7 +84,7 @@ class MazeGui:
 
         self.maze = RectangularMaze.blank_maze((self.rows_tk.get(), self.cols_tk.get()))
 
-        self.view = TkRectCanvas(self.frame, self.maze)
+        self.view = TkMazeCanvas(self.frame, self.maze)
         self.view.frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
         self.options_frame = ttk.Frame(self.frame)
@@ -190,8 +190,9 @@ class MazeGui:
 
         self.view.draw_path(path)
 
-    def run(self):
-        self.root.mainloop()
+
+def get_view_frame():
+    return MazeGui()
 
 
 if __name__ == "__main__":

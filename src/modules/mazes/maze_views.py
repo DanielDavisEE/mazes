@@ -4,16 +4,16 @@ from tkinter import ttk
 
 import numpy as np
 
-from src.mazes.maze import (
+from maze import (
     Direction,
     Node,
 )
+from modules.gui_utils import ViewBase
 
 
-class ViewBase:
+class MazeViewBase(ViewBase):
     def __init__(self, maze=None, start=None, finish=None, path=None):
-        self.log = logging.getLogger(self.__class__.__name__)
-        self.log.setLevel(logging.DEBUG)
+        super().__init__()
 
         self.maze = maze
         self.start = start
@@ -21,7 +21,7 @@ class ViewBase:
         self.path = path
 
 
-class AsciiView(ViewBase):
+class AsciiMazeView(MazeViewBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -99,7 +99,7 @@ class AsciiView(ViewBase):
         self._maze_array = maze_array
 
 
-class TkRectCanvas(ViewBase):
+class TkMazeCanvas(MazeViewBase):
     SQUARE_PX = 41
     LINE_WIDTH = 2
     MARGIN = 10
@@ -171,14 +171,14 @@ class TkRectCanvas(ViewBase):
             self.canvas.destroy()
 
         width_px = (
-            self.maze.cols * (self.SQUARE_PX + self.LINE_WIDTH)
-            + self.LINE_WIDTH
-            + 2 * self.MARGIN
+                self.maze.cols * (self.SQUARE_PX + self.LINE_WIDTH)
+                + self.LINE_WIDTH
+                + 2 * self.MARGIN
         )
         height_px = (
-            self.maze.rows * (self.SQUARE_PX + self.LINE_WIDTH)
-            + self.LINE_WIDTH
-            + 2 * self.MARGIN
+                self.maze.rows * (self.SQUARE_PX + self.LINE_WIDTH)
+                + self.LINE_WIDTH
+                + 2 * self.MARGIN
         )
 
         self.log.debug(f"Creating canvas {width_px}x{height_px}")
@@ -338,16 +338,16 @@ class TkRectCanvas(ViewBase):
         self.draw_path()
 
 
-class TkView(ViewBase):
+class TkView:
     """Minimal constructor for displaying a maze with Tk"""
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self):
+        super().__init__()
 
         self.root = tk.Tk()
         self.root.title("Maze GUI")
 
-        self.view = TkRectCanvas(
+        self.view = TkMazeCanvas(
             self.root, self.maze, self.start, self.finish, self.path
         )
         self.view.frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True)

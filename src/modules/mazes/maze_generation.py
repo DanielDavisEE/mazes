@@ -3,7 +3,7 @@ from enum import IntEnum
 
 import numpy as np
 
-from src.mazes.maze import (
+from maze import (
     Direction,
     Maze,
     rng,
@@ -23,7 +23,7 @@ def _is_visited(maze, node):
 
 
 def recursive_backtrack(
-    maze, current_node=None, *, loop_chance: float = 0.0, move_history: list = None
+        maze, current_node=None, *, loop_chance: float = 0.0, move_history: list = None
 ):
     LOG.debug("Creating maze using `recursive_backtrack`")
     if current_node is None:
@@ -46,7 +46,7 @@ def recursive_backtrack(
 
 
 def iterative_backtrack(
-    maze: Maze, loop_chance: float = 0.0, move_history: list = None
+        maze: Maze, loop_chance: float = 0.0, move_history: list = None
 ):
     LOG.info("Creating maze using `iterative_backtrack`")
     current_node = maze.random_node()
@@ -108,7 +108,7 @@ def prims(maze: Maze, *, loop_chance: float = 0.0, move_history: list = None):
 
 
 def recursive_divison(
-    maze: Maze, *, loop_chance: float = 0.0, move_history: list = None
+        maze: Maze, *, loop_chance: float = 0.0, move_history: list = None
 ):
     pass
 
